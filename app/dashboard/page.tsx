@@ -72,7 +72,16 @@ export default function DashboardPage() {
           errorData = { error: `HTTP ${res.status}`, details: await res.text() }
         }
         console.error("Chat API Error:", errorData)
-        setChat((c) => [...c, { role: "assistant", content: "Sorry, I couldn't respond right now. Please check your API key." }])
+        
+        // Show more specific error message to user
+        let errorMessage = "Sorry, I couldn't respond right now.";
+        if (errorData.error?.includes("API key")) {
+          errorMessage = "API key issue detected. Please check server logs.";
+        } else if (errorData.details) {
+          errorMessage = `Error: ${errorData.error || errorData.details}`;
+        }
+        
+        setChat((c) => [...c, { role: "assistant", content: errorMessage }])
         return
       }
       

@@ -32,9 +32,20 @@ export async function POST(req) {
 
     // Check for API key
     const apiKey = process.env.OPENROUTER_API_KEY;
+    console.log('API Key check:', { 
+      exists: !!apiKey, 
+      length: apiKey?.length || 0,
+      prefix: apiKey?.substring(0, 10) || 'MISSING',
+      allEnvKeys: Object.keys(process.env).filter(k => k.includes('OPENROUTER')).join(', ')
+    });
+    
     if (!apiKey) {
-      console.error('OpenRouter API key is missing');
-      return NextResponse.json({ error: 'OpenRouter API key is missing' }, { status: 500 });
+      console.error('OpenRouter API key is missing from environment variables');
+      return NextResponse.json({ 
+        error: 'OpenRouter API key is not configured',
+        hint: 'Please check Vercel environment variables and redeploy',
+        availableKeys: Object.keys(process.env).filter(k => k.includes('OPENROUTER'))
+      }, { status: 500 });
     }
 
     // Call OpenRouter API
@@ -79,10 +90,30 @@ export async function POST(req) {
     
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('OpenRouter API error:', errorText);
+      console.error('OpenRouter API error:', {
+        status: response.status,
+        statusText: response.statusText,
+        body: errorText,
+        headers: Object.fromEntries(response.headers.entries())
+      });
+      
+      // Try to parse error for more details
+      let errorDetails = errorText;
+      try {
+        const errorJson = JSON.parse(errorText);
+        errorDetails = errorJson.error?.message || errorJson.message || errorText;
+      } catch (e) {
+        // Keep as text
+      }
+      
       return NextResponse.json({ 
-        error: 'Failed to get response from AI service',
-        details: errorText
+        error: 'Failed to get response from OpenRouter AI',
+        details: errorDetails,
+        status: response.status,
+        hint: response.status === 401 ? 'Invalid API key - please check your OPENROUTER_API_KEY' : 
+              response.status === 402 ? 'Insufficient credits - please add credits to your OpenRouter account' :
+              response.status === 429 ? 'Rate limit exceeded - please try again later' :
+              'OpenRouter API error'
       }, { status: 500 });
     }
 
