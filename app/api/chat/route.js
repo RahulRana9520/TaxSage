@@ -64,8 +64,8 @@ export async function POST(req) {
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${apiKey}`,
-        'HTTP-Referer': 'http://localhost:3001',
-        'X-Title': 'CA Advisor',
+        'HTTP-Referer': req.headers.get('origin') || 'https://taxsage.vercel.app',
+        'X-Title': 'TaxSage - CA Advisor',
       },
       body: JSON.stringify({
         model: 'deepseek/deepseek-chat',
