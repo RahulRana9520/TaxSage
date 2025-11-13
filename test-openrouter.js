@@ -1,5 +1,5 @@
 // Test OpenRouter API Key
-const API_KEY = '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';
+const API_KEY = process.env.OPENROUTER_API_KEY || 'your-api-key-here';
 
 async function testOpenRouter() {
   console.log('Testing OpenRouter API...');
