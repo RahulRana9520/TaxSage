@@ -24,10 +24,27 @@ export async function POST(req: Request) {
     failedAttempts.set(key, { count: (entry?.count || 0) + 1, last: now })
     return NextResponse.json({ error: "Invalid credentials" }, { status: 401 })
   }
+  
+  // Debug logging
   const passwordHash = createHash("sha256").update(password).digest("hex")
+  console.log("Login Debug:", {
+    email: email,
+    inputPassword: password,
+    computedHash: passwordHash,
+    storedHash: user.passwordHash,
+    hashMatch: passwordHash === user.passwordHash
+  })
+  
   if (passwordHash !== user.passwordHash) {
     failedAttempts.set(key, { count: (entry?.count || 0) + 1, last: now })
-    return NextResponse.json({ error: "Invalid credentials" }, { status: 401 })
+    return NextResponse.json({ 
+      error: "Invalid credentials",
+      debug: {
+        inputHash: passwordHash,
+        storedHash: user.passwordHash,
+        match: passwordHash === user.passwordHash
+      }
+    }, { status: 401 })
   }
   // Optionally: check phone matches user profile (if stored)
   // ...

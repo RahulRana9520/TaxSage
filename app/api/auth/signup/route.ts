@@ -15,6 +15,14 @@ export async function POST(req: Request) {
   }
   const id = newId()
   const passwordHash = createHash("sha256").update(password).digest("hex")
+  
+  // Debug logging  
+  console.log("Signup Debug:", {
+    email: email,
+    password: password,
+    passwordHash: passwordHash
+  })
+  
   await repo.createUser({ id, email, passwordHash, name, createdAt: new Date().toISOString() })
   await setSessionUserId(id)
   
