@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getSessionUserId } from '@/lib/auth';
 import { getRepo, type User, type UserProfile, type IncomeEntry, type ExpenseEntry, type BudgetAllocation, type Goal } from '@/lib/repository';
+import { googleSheetsService } from '@/lib/google-sheets';
 
 interface Message {
   role: 'user' | 'assistant' | 'system';
@@ -71,43 +72,115 @@ export async function POST(req: Request) {
       console.log('Session userId:', userId);
       if (userId) {
         console.log('Loading user context for AI:', userId);
-        const repo = getRepo();
         
-        // Fetch all user data
-        const [user, profile, income, expenses, budget, goals] = await Promise.all([
-          repo.getUserById(userId),
-          repo.getProfile(userId),
-          repo.listIncome(userId),
-          repo.listExpenses(userId),
-          repo.getBudget(userId),
-          repo.getGoals(userId)
-        ]);
-        
-        userContext = {
-          user,
-          profile,
-          income,
-          expenses,
-          budget,
-          goals
-        };
-        
-        console.log('User context loaded:', {
-          hasProfile: !!profile,
-          profileName: profile?.fullName,
-          incomeEntries: income?.length || 0,
-          expenseEntries: expenses?.length || 0,
-          budgetCategories: budget?.length || 0,
-          goals: goals?.length || 0
-        });
+        // Try Google Sheets first, then fallback to local repository
+        try {
+          console.log('Attempting to load data from Google Sheets...');
+          const sheetsData = await googleSheetsService.getUserFinancialData(userId);
+          
+          if (sheetsData) {
+            console.log('Successfully loaded data from Google Sheets:', {
+              hasProfile: !!sheetsData.profile,
+              profileName: sheetsData.profile?.fullName,
+              incomeEntries: sheetsData.income?.length || 0,
+              expenseEntries: sheetsData.expenses?.length || 0,
+              budgetCategories: sheetsData.budget?.length || 0,
+              goals: sheetsData.goals?.length || 0
+            });
+            
+            // Convert Google Sheets data to UserContext format
+            userContext = {
+              user: { id: userId, email: '', name: sheetsData.profile.fullName, passwordHash: '', createdAt: '' } as User,
+              profile: {
+                userId: userId,
+                fullName: sheetsData.profile.fullName,
+                age: sheetsData.profile.age,
+                location: sheetsData.profile.location,
+                dependents: sheetsData.profile.dependents,
+                filingStatus: sheetsData.profile.filingStatus,
+                creditScore: sheetsData.profile.creditScore,
+                creditBand: sheetsData.profile.creditBand,
+                creditProvider: undefined,
+                creditRetrievedAt: undefined,
+                creditSource: undefined
+              } as UserProfile,
+              income: sheetsData.income.map(inc => ({
+                id: '',
+                userId: userId,
+                source: inc.source,
+                amount: inc.amount,
+                frequency: inc.frequency as "monthly" | "weekly" | "yearly" | "one-time"
+              })) as IncomeEntry[],
+              expenses: sheetsData.expenses.map(exp => ({
+                id: '',
+                userId: userId,
+                category: exp.category,
+                amount: exp.amount,
+                date: exp.date,
+                description: exp.description,
+                level: undefined
+              })) as ExpenseEntry[],
+              budget: sheetsData.budget.map(bud => ({
+                id: '',
+                userId: userId,
+                category: bud.category,
+                monthlyAmount: bud.monthlyAmount
+              })) as BudgetAllocation[],
+              goals: sheetsData.goals.map(goal => ({
+                id: '',
+                userId: userId,
+                name: goal.name,
+                targetAmount: goal.targetAmount,
+                targetDate: goal.targetDate
+              })) as Goal[]
+            };
+          } else {
+            console.log('No data found in Google Sheets, falling back to local repository...');
+            throw new Error('No Google Sheets data');
+          }
+          
+        } catch (sheetsError) {
+          console.log('Google Sheets failed, using local repository:', sheetsError instanceof Error ? sheetsError.message : 'Unknown error');
+          
+          // Fallback to existing repository system
+          const repo = getRepo();
+          
+          // Fetch all user data
+          const [user, profile, income, expenses, budget, goals] = await Promise.all([
+            repo.getUserById(userId),
+            repo.getProfile(userId),
+            repo.listIncome(userId),
+            repo.listExpenses(userId),
+            repo.getBudget(userId),
+            repo.getGoals(userId)
+          ]);
+          
+          userContext = {
+            user,
+            profile,
+            income,
+            expenses,
+            budget,
+            goals
+          };
+          
+          console.log('Local repository data loaded:', {
+            hasProfile: !!profile,
+            profileName: profile?.fullName,
+            incomeEntries: income?.length || 0,
+            expenseEntries: expenses?.length || 0,
+            budgetCategories: budget?.length || 0,
+            goals: goals?.length || 0
+          });
+        }
         
         // Debug: Log detailed profile info
-        if (profile) {
+        if (userContext?.profile) {
           console.log('Profile details:', {
-            fullName: profile.fullName,
-            age: profile.age,
-            location: profile.location,
-            filingStatus: profile.filingStatus
+            fullName: userContext.profile.fullName,
+            age: userContext.profile.age,
+            location: userContext.profile.location,
+            filingStatus: userContext.profile.filingStatus
           });
         } else {
           console.log('No profile found for user:', userId);
