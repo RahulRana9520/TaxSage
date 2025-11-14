@@ -29,6 +29,27 @@ export class SupabaseRepo implements CARepository {
     }
   }
 
+  async getUserById(id: string): Promise<User | null> {
+    const { data, error } = await supabase
+      .from('app_users')
+      .select('*')
+      .eq('id', id)
+      .single()
+    
+    if (error) {
+      console.log('User not found by ID:', id)
+      return null
+    }
+    
+    return {
+      id: data.id,
+      email: data.email,
+      passwordHash: data.password_hash,
+      name: data.name,
+      createdAt: data.created_at
+    }
+  }
+
   async createUser(user: User): Promise<void> {
     const { error } = await supabase
       .from('app_users')
