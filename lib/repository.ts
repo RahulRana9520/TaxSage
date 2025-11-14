@@ -59,6 +59,7 @@ export type Goal = {
 export interface CARepository {
   // auth
   getUserByEmail(email: string): Promise<User | null>
+  getUserById(id: string): Promise<User | null>
   createUser(user: User): Promise<void>
 
   // profile & financials
@@ -86,6 +87,10 @@ class FileBasedRepo implements CARepository {
 
   async getUserByEmail(email: string): Promise<User | null> {
     return this.storage.getUserByEmail(email)
+  }
+  
+  async getUserById(id: string): Promise<User | null> {
+    return this.storage.getUser(id)
   }
   
   async createUser(user: User): Promise<void> {
@@ -154,6 +159,9 @@ class InMemoryRepo implements CARepository {
   async getUserByEmail(email: string): Promise<User | null> {
     const id = mem.usersByEmail.get(email)
     if (!id) return null
+    return mem.users.get(id) || null
+  }
+  async getUserById(id: string): Promise<User | null> {
     return mem.users.get(id) || null
   }
   async createUser(user: User): Promise<void> {
@@ -235,6 +243,16 @@ class OracleORDSRepo implements CARepository {
     if (!res.ok) return null
     const data = await res.json()
     return data.items?.[0] || null
+  }
+
+  async getUserById(id: string): Promise<User | null> {
+    this.ensureConfigured()
+    const res = await fetch(`${this.base}/${this.schema}/users/${encodeURIComponent(id)}`, {
+      headers: this.headers,
+    })
+    if (!res.ok) return null
+    const data = await res.json()
+    return data
   }
 
   async createUser(user: User): Promise<void> {
