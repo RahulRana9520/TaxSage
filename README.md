@@ -160,3 +160,46 @@ The project is configured to ignore TypeScript build errors in production. If yo
 ## License
 
 This project is for demonstration purposes.
+
+
+https://docs.google.com/spreadsheets/d/1QtpIqXQzbOccJoBPQ5ciSlM1AlEGgrRHS5Vc8Pq0aSM/edit
+
+1. Selected GCP Project ✓
+Project Name: My First Project
+
+Project ID: wide-pulsar-478216-n3
+
+2. Enabled Google Sheets API ✓
+Status: Enabled and ready to use
+
+3. Created Service Account ✓
+Name: financial-management-sheets
+
+Email: financial-management-sheets@wide-pulsar-478216-n3.iam.gserviceaccount.com
+
+Description: Service account for Financial Management System Google Sheets access
+
+4. Downloaded JSON Key File ✓
+Filename: wide-pulsar-478216-n3-d9034b7e0922.json
+
+The file has been downloaded to your Downloads folder
+
+⚠️ Important: Keep this file secure - it provides access to your cloud resources!
+
+5. Shared Google Sheet ✓
+Shared the Financial Management System spreadsheet with the service account
+
+Permission Level: Editor (allows read and write access)
+
+📝 For Step 3 - Add to your .env.local file:
+text
+GOOGLE_SERVICE_ACCOUNT_KEY='<paste the entire content of wide-pulsar-478216-n3-d9034b7e0922.json here>'
+GOOGLE_SHEETS_ID="1QtpIqXQzbOccJoBPQ5ciSlM1AlEGgrRHS5Vc8Pq0aSM"
+How to get the JSON content:
+Open the downloaded file wide-pulsar-478216-n3-d9034b7e0922.json from your Downloads folder
+
+Copy the entire JSON content (it will look like {"type":"service_account","project_id":"wide-pulsar-478216-n3",...})
+
+Paste it as the value for GOOGLE_SERVICE_ACCOUNT_KEY (keep it on one line or use proper JSON escaping)
+
+Your Financial Management System is now fully set up and ready to interact with Google Sheets via the API! 🚀
