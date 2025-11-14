@@ -250,6 +250,112 @@ class GoogleSheetsService {
       return false;
     }
   }
+
+  async addBudgetEntry(userId: string, budgetEntry: { category: string; monthlyAmount: number }) {
+    try {
+      const sheets = await this.initializeSheets();
+
+      await sheets.spreadsheets.values.append({
+        spreadsheetId: this.spreadsheetId,
+        range: 'Budget!A:C',
+        valueInputOption: 'RAW',
+        requestBody: {
+          values: [[userId, budgetEntry.category, budgetEntry.monthlyAmount]]
+        }
+      });
+
+      return true;
+    } catch (error) {
+      console.error('Error adding budget to Google Sheets:', error);
+      return false;
+    }
+  }
+
+  async addGoalEntry(userId: string, goalEntry: { name: string; targetAmount: number; targetDate: string }) {
+    try {
+      const sheets = await this.initializeSheets();
+
+      await sheets.spreadsheets.values.append({
+        spreadsheetId: this.spreadsheetId,
+        range: 'Goals!A:D',
+        valueInputOption: 'RAW',
+        requestBody: {
+          values: [[userId, goalEntry.name, goalEntry.targetAmount, goalEntry.targetDate]]
+        }
+      });
+
+      return true;
+    } catch (error) {
+      console.error('Error adding goal to Google Sheets:', error);
+      return false;
+    }
+  }
+
+  async addMultipleIncomeEntries(userId: string, incomeEntries: { source: string; amount: number; frequency: string }[]) {
+    try {
+      const sheets = await this.initializeSheets();
+      
+      const rows = incomeEntries.map(entry => [userId, entry.source, entry.amount, entry.frequency]);
+
+      await sheets.spreadsheets.values.append({
+        spreadsheetId: this.spreadsheetId,
+        range: 'Income!A:D',
+        valueInputOption: 'RAW',
+        requestBody: {
+          values: rows
+        }
+      });
+
+      return true;
+    } catch (error) {
+      console.error('Error adding multiple income entries to Google Sheets:', error);
+      return false;
+    }
+  }
+
+  async addMultipleBudgetEntries(userId: string, budgetEntries: { category: string; monthlyAmount: number }[]) {
+    try {
+      const sheets = await this.initializeSheets();
+      
+      const rows = budgetEntries.map(entry => [userId, entry.category, entry.monthlyAmount]);
+
+      await sheets.spreadsheets.values.append({
+        spreadsheetId: this.spreadsheetId,
+        range: 'Budget!A:C',
+        valueInputOption: 'RAW',
+        requestBody: {
+          values: rows
+        }
+      });
+
+      return true;
+    } catch (error) {
+      console.error('Error adding multiple budget entries to Google Sheets:', error);
+      return false;
+    }
+  }
+
+  async addMultipleGoalEntries(userId: string, goalEntries: { name: string; targetAmount: number; targetDate: string }[]) {
+    try {
+      const sheets = await this.initializeSheets();
+      
+      const rows = goalEntries.map(entry => [userId, entry.name, entry.targetAmount, entry.targetDate]);
+
+      await sheets.spreadsheets.values.append({
+        spreadsheetId: this.spreadsheetId,
+        range: 'Goals!A:D',
+        valueInputOption: 'RAW',
+        requestBody: {
+          values: rows
+        }
+      });
+
+      return true;
+    } catch (error) {
+      console.error('Error adding multiple goal entries to Google Sheets:', error);
+      return false;
+    }
+  }
 }
 
 export const googleSheetsService = new GoogleSheetsService();
