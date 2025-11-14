@@ -136,7 +136,7 @@ export class SupabaseRepo implements CARepository {
     
     if (error || !data) return []
     
-    return data.map(row => ({
+    return data.map((row: any) => ({
       id: row.id,
       userId: row.user_id,
       source: row.source,
@@ -180,7 +180,7 @@ export class SupabaseRepo implements CARepository {
     
     if (error || !data) return []
     
-    return data.map(row => ({
+    return data.map((row: any) => ({
       id: row.id,
       userId: row.user_id,
       category: row.category,
@@ -221,7 +221,7 @@ export class SupabaseRepo implements CARepository {
     
     if (error || !data) return []
     
-    return data.map(row => ({
+    return data.map((row: any) => ({
       id: row.id,
       userId: row.user_id,
       category: row.category,
@@ -260,7 +260,7 @@ export class SupabaseRepo implements CARepository {
     
     if (error || !data) return []
     
-    return data.map(row => ({
+    return data.map((row: any) => ({
       id: row.id,
       userId: row.user_id,
       name: row.name,
